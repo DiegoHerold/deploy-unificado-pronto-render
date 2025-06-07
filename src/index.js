@@ -1,8 +1,10 @@
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
-import path from 'path'
+import path from 'node:path'
 import fs from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname } from 'node:path'
 import { processFiles } from './processController.js'
 import { getLogs, resetLogs } from './helpers/logger.js'
 
@@ -22,7 +24,6 @@ app.post('/upload', upload.fields([{ name: 'conferencia' }, { name: 'matriz' }])
 
     res.download(resultadoPath, 'resultado.xlsm', (err) => {
       if (err) console.error('Erro ao enviar o arquivo:', err)
-      // limpa arquivos temporários depois de enviar
       fs.unlinkSync(conferenciaPath)
       fs.unlinkSync(matrizPath)
     })
@@ -32,20 +33,12 @@ app.post('/upload', upload.fields([{ name: 'conferencia' }, { name: 'matriz' }])
   }
 })
 
-// Logs para exibição no frontend
+// Logs
 app.get('/logs', (req, res) => {
   res.json({ logs: getLogs() })
 })
 
-const PORT = 3001
-app.listen(PORT, () => {
-  console.log(`✅ Backend rodando em http://localhost:${PORT}`)
-})
-
 // === SERVE FRONTEND (VITE BUILD) ===
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
@@ -53,4 +46,10 @@ app.use(express.static(path.join(__dirname, '../public')))
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'))
+})
+
+// Start
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+  console.log(`✅ Servidor rodando em http://localhost:${PORT}`)
 })
